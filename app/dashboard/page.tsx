@@ -288,7 +288,7 @@ const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
 
   const currentMonthValue = new Date().toISOString().slice(0, 7);
   const [selectedAuditMonth, setSelectedAuditMonth] = useState(currentMonthValue);
-const [reviews, setReviews] = useState<ReviewRecord[]>([]);
+const [reviews, setReviews] = useState<any[]>([]);  
 const [loadingReviews, setLoadingReviews] = useState(false);
 const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
 const [reviewRatingByBooking, setReviewRatingByBooking] = useState<Record<string, number>>({});
@@ -626,7 +626,7 @@ const loadMyReviews = async () => {
     return;
   }
 
-  setReviews((data || []) as ReviewRecord[]);
+  setReviews((data || []) as any[]);
   setLoadingReviews(false);
 };
 
