@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
@@ -251,7 +251,7 @@ const styles = {
   } as const,
 };
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedNotaryId = searchParams.get("notaryId") || "";
@@ -2074,5 +2074,13 @@ const handlePayNow = async (booking: Booking) => {
         </div>
       </div>
     </div>
+  );
+}
+  
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "24px" }}>Loading dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
