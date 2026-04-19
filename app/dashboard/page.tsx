@@ -275,7 +275,21 @@ const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+const getBookingDisplayStatus = (booking: Booking) => {
+  if (booking.status === "completed") {
+    return "Completed";
+  }
 
+  if (booking.status === "accepted" && booking.payment_status === "paid") {
+    return "Confirmed & Paid";
+  }
+
+  if (booking.status === "accepted") {
+    return "Accepted - Awaiting Payment";
+  }
+
+  return booking.status;
+};
   const [selectedNotaryProfile, setSelectedNotaryProfile] = useState<ProfileRecord | null>(null);
   const [loadingSelectedNotary, setLoadingSelectedNotary] = useState(false);
 
@@ -1908,7 +1922,7 @@ const handlePayNow = async (booking: Booking) => {
                       <p><strong>Address:</strong> {booking.address}</p>
                       <p><strong>Date:</strong> {booking.date}</p>
                       <p><strong>Time:</strong> {booking.time}</p>
-                      <p><strong>Status:</strong> {booking.status}</p>
+                      <p><strong>Status:</strong> {getBookingDisplayStatus(booking)}</p>
                       <p>
                         <strong>Payment Status:</strong> {booking.payment_status || "unpaid"}
                       </p>
@@ -1929,8 +1943,7 @@ const handlePayNow = async (booking: Booking) => {
                         <p><strong>Note:</strong> {booking.custom_note}</p>
                       )}
 
-                      {booking.status === "accepted" && (
-  <div style={{ marginTop: "12px" }}>
+{booking.status === "accepted" && booking.payment_status !== "paid" && (  <div style={{ marginTop: "12px" }}>
     <button
       style={styles.buttonWarning}
       onClick={() => handlePayNow(booking)}
@@ -1964,7 +1977,7 @@ const handlePayNow = async (booking: Booking) => {
                       <p><strong>Address:</strong> {booking.address}</p>
                       <p><strong>Date:</strong> {booking.date}</p>
                       <p><strong>Time:</strong> {booking.time}</p>
-                      <p><strong>Status:</strong> {booking.status}</p>
+                      <p><strong>Status:</strong> {getBookingDisplayStatus(booking)}</p>
                       <p>
                         <strong>Payment Status:</strong> {booking.payment_status || "unpaid"}
                       </p>
