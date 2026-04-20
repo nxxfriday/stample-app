@@ -185,6 +185,7 @@ export default function AdminPage() {
             <button onClick={loadVerifications} style={styles.buttonPrimary}>
               {loading ? "Loading..." : "Refresh"}
             </button>
+            disabled={booking.payment_status === "paid"}
           </div>
         </div>
 

@@ -280,6 +280,10 @@ const getBookingDisplayStatus = (booking: Booking) => {
     return "Completed";
   }
 
+  if (booking.status === "confirmed" && booking.payment_status === "paid") {
+    return "Confirmed & Paid";
+  }
+
   if (booking.status === "accepted" && booking.payment_status === "paid") {
     return "Confirmed & Paid";
   }
@@ -1534,7 +1538,7 @@ const handlePayNow = async (booking: Booking) => {
                                 onClick={() => savePricing(booking.id)}
                                 disabled={savingPriceId === booking.id}
                                 style={styles.buttonWarning}
-                              >
+                              disabled={booking.payment_status === "paid"}>
                                 {savingPriceId === booking.id ? "Saving..." : "Save Pricing"}
                               </button>
 
@@ -1950,6 +1954,7 @@ const handlePayNow = async (booking: Booking) => {
       disabled={payingBookingId === booking.id}
     >
       {payingBookingId === booking.id ? "Redirecting..." : "Pay Now"}
+      disabled={booking.payment_status === "paid"}
     </button>
   </div>
 )}

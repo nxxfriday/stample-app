@@ -37,12 +37,13 @@ export async function POST(req: Request) {
         typeof session.payment_intent === "string" ? session.payment_intent : null;
 
       const { error: bookingUpdateError } = await supabaseAdmin
-        .from("bookings")
-        .update({
-          payment_status: "paid",
-          total_price: amountTotal,
-        })
-        .eq("id", bookingId);
+  .from("bookings")
+  .update({
+    payment_status: "paid",
+    status: "confirmed",
+    total_price: amountTotal,
+  })
+  .eq("id", bookingId);
 
       if (bookingUpdateError) {
         console.error("Booking update error:", bookingUpdateError);
