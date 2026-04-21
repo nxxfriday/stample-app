@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
@@ -102,14 +102,53 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const redirectByRole = async (userId: string) => {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (error || !profile) {
+      router.push("/dashboard");
+      return;
+    }
+
+    if (profile.role === "admin") {
+      router.push("/admin");
+    } else if (profile.role === "notary") {
+      router.push("/notary/dashboard");
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        await redirectByRole(session.user.id);
+        return;
+      }
+
+      setCheckingSession(false);
+    };
+
+    checkExistingSession();
+  }, []);
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
     setErrorMessage("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -120,8 +159,25 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    if (!data.user) {
+      setErrorMessage("No user found.");
+      setSubmitting(false);
+      return;
+    }
+
+    await redirectByRole(data.user.id);
+    setSubmitting(false);
   };
+
+  if (checkingSession) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <p>Checking session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.page}>

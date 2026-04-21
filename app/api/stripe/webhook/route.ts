@@ -32,23 +32,29 @@ export async function POST(req: Request) {
     const bookingId = session.metadata?.bookingId;
 
     if (bookingId) {
-      const amountTotal = Number(session.amount_total || 0) / 100;
+      const amountTotal = session.amount_total || 0;
       const paymentIntentId =
-        typeof session.payment_intent === "string" ? session.payment_intent : null;
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : null;
 
+      // Update booking after successful payment
       const { error: bookingUpdateError } = await supabaseAdmin
-  .from("bookings")
-  .update({
-    payment_status: "paid",
-    status: "confirmed",
-    total_price: amountTotal,
-  })
-  .eq("id", bookingId);
+        .from("bookings")
+        .update({
+          payment_status: "paid",
+          status: "confirmed",
+          amount_total: amountTotal,
+          stripe_session_id: session.id,
+        })
+        .eq("id", bookingId);
 
       if (bookingUpdateError) {
         console.error("Booking update error:", bookingUpdateError);
+        return new Response("Failed to update booking", { status: 500 });
       }
 
+      // Optional: fetch updated booking if you want to use it later
       const { data: booking, error: bookingFetchError } = await supabaseAdmin
         .from("bookings")
         .select("*")
@@ -59,26 +65,19 @@ export async function POST(req: Request) {
         console.error("Booking fetch error:", bookingFetchError);
       }
 
+      // Optional transaction logging if your transactions table exists
       if (booking) {
-        const notaryPrice = Number(booking.price || 0);
-        const totalPrice = amountTotal;
-        const platformFee = Math.max(totalPrice - notaryPrice, 0);
-
         const { error: transactionInsertError } = await supabaseAdmin
           .from("transactions")
           .insert([
             {
               booking_id: booking.id,
               notary_id: booking.notary_id,
-              customer_id: booking.user_id,
-              service_date: booking.date,
-              transaction_date: new Date().toISOString().slice(0, 10),
-              address: booking.address,
+              customer_id: booking.customer_id,
+              transaction_date: new Date().toISOString(),
               payment_method: "stripe",
               payment_status: "paid",
-              notary_price: notaryPrice,
-              platform_fee: platformFee,
-              total_price: totalPrice,
+              total_price: amountTotal / 100,
               stripe_payment_intent_id: paymentIntentId,
               receipt_number: `ST-${booking.id.slice(0, 8).toUpperCase()}`,
             },
